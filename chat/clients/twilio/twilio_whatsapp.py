@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+import os
+load_dotenv()
 import inspect
 import logging
 from typing import Union
@@ -29,7 +32,7 @@ class TwilioWhatsAppMessage:
     def __post_init__(self) -> None:
         if not self.from_.startswith("whatsapp:"):
             self.from_ = f"whatsapp:{self.from_}"
-        if not self.to.startswith("whatsapp:"):
+        if self.to and not self.to.startswith("whatsapp:"):
             self.to = f"whatsapp:{self.to}"
     
     def send(self, client: Client):
@@ -113,7 +116,7 @@ class TwilioWhatsAppClient(ChatClient):
             return message.send(self.client)
         except Exception as e:
             if on_failure is not None:
-                if isinstance(on_failure, callable):
+                if callable(on_failure):
                     return on_failure(e, **kwargs)
                 return on_failure
             else:
@@ -158,14 +161,18 @@ class TwilioWhatsAppClient(ChatClient):
         and returns a TwilioWhatsAppMessage object.
         """
         msg_media = None
-        if int(request_values.get("NumMedia")) > 0:
+        num_media = int(request_values.get("NumMedia") or 0)
+        if num_media > 0:
             media_url = request_values.get("MediaUrl0")
             media_type = request_values.get("MediaContentType0")
             msg_media = Media(url=media_url, content_type=media_type)
+        to_number = request_values.get("To")
+        if to_number is None:
+            to_number = ""
         message = TwilioWhatsAppMessage(
             body=request_values.get("Body"),
             from_=request_values.get("From"),
-            to=request_values.get("To"),
+            to=to_number,
             media=msg_media
         )
         # print(request_values, msg_media, message, sep="\n")

@@ -1,6 +1,6 @@
 import os, logging
 from datetime import datetime
-from dotenv import find_dotenv, load_dotenv
+from dotenv import load_dotenv
 from flask import Flask, request, jsonify
 from chat.clients.twilio import TwilioWhatsAppClient, TwilioWhatsAppMessage
 from chat.handlers.openai import (
@@ -20,7 +20,7 @@ from app.whatsapp.chat import Sender, OpenAIChatManager
 # from chat.handlers.image import image_captioning
 
 # Load environment variables and configurations for the app
-load_dotenv(find_dotenv())
+load_dotenv()
 logging.basicConfig()
 logger = logging.getLogger("WP-APP")
 logger.setLevel(logging.DEBUG)
@@ -53,7 +53,7 @@ model_options = dict(
 chat_client = TwilioWhatsAppClient(
     account_sid=os.environ.get("TWILIO_ACCOUNT_SID"),
     auth_token=os.environ.get("TWILIO_AUTH_TOKEN"),
-    from_number=os.environ.get("TWILLIO_WHATSAPP_NUMBER", "+14155238886"),
+    from_number=os.environ.get("TWILIO_WHATSAPP_NUMBER", "+14155238886"),
 )
 
 # instance the app

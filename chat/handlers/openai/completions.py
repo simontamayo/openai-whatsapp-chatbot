@@ -5,6 +5,15 @@ import logging, re
 from typing import List
 
 import openai
+from dotenv import load_dotenv
+import os
+load_dotenv()
+openai_api_key = os.environ.get("OPENAI_API_KEY")
+openai_base_url = os.environ.get("OPENAI_BASE_URL")
+try:
+    client = openai.OpenAI(api_key=openai_api_key, base_url=openai_base_url)
+except AttributeError:
+    client = None
 from chat.clients import ChatClient
 
 __all__ = [
@@ -74,12 +83,23 @@ def chat_completion(
     """
     if "engine" in kwargs:
         model = kwargs.pop("engine")
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=messages,
-        **kwargs
-    )
+    if client:
+        response = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            **kwargs
+        )
+    else:
+        raise RuntimeError(
+            "OpenAI client is not available or your openai-python package is outdated. "
+            "Please upgrade to the latest openai package and ensure your API key and base URL are correct."
+        )
 
+    # For OpenAI v1 client, response is a pydantic object, not a dict
+    if hasattr(response, "choices"):
+        # v1 client: response.choices is a list of objects with .message.content
+        return response.choices[0].message.content
+    # Legacy: dict-like
     return response.get("choices",[{}])[0].get("message", {}).get("content")
 
 
