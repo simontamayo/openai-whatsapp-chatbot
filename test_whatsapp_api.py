@@ -10,6 +10,7 @@ payload = {
     "Body": "Hello, WhatsApp bot!"
 }
 
+
 response = requests.post(API_URL, data=payload)
 
 print("Status code:", response.status_code)
